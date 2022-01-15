@@ -1,0 +1,16 @@
+{
+    "config": {
+        "title": "Baxi power meter",
+        "step": {
+            "user": {
+                "title": "Baxi power meter - configuration",
+                "description": "Set configuration parameters as in your BAXI app. Documentation at https://github.com/vipial1/BAXI_power-meter",
+                "data": {
+                    "name": "Power meter name",
+                    "username": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "domain": "baxi_power-meter",
+  "name": "BAXI Power meter",
+  "config_flow": true,
+  "documentation": "https://github.com/vipial1/BAXI_power-meter",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@vipial1"
+  ],
+  "iot_class": "cloud_polling",
+  "version": "1.0"
+}
