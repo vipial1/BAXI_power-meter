@@ -10,6 +10,15 @@
                     "username": "Email",
                     "password": "Password"
                 }
+            },
+            "periods": {
+                "title": "Baxi power meter - periods",
+                "description": "Define, if you want, different time periods. Documentation at https://github.com/vipial1/BAXI_power-meter",
+                "data": {
+                    "P1": "P1",
+                    "P2": "P2",
+                    "P3": "P3"
+                }
             }
         }
     }

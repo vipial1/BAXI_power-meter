@@ -51,17 +51,40 @@ class BaxiAPI:
             "username": self._user,
             "password": self._password,
         }
+        await self._post_token(api_endpoint, payload)
 
+    async def _post_token(self, api_endpoint, payload):
         response = await self.async_post_request(endpoint=api_endpoint, payload=payload)
         if not response:
-            logging.error("ERROR logging to BAXI. Perhaps wrong password??")
-            raise Exception("ERROR logging to BAXI. Perhaps wrong password??")
+            logging.error("ERROR logging to BAXI. Perhaps wrong password/token??")
+            raise Exception("ERROR logging to BAXI. Perhaps wrong password/token??")
 
         response_json = response.json()
         self._access_token = response_json.get("access_token", None)
         self._refresh_token = response_json.get("refresh_token", None)
-        self._token_duration = response_json.get("expires_in", None)
+        self._token_duration = int(response_json.get("expires_in", 0))
         self._expiration_time = datetime.now() + timedelta(seconds=self._token_duration)
+
+    def _need_refresh_token(self, payload):
+        if not self._refresh_token:
+            # Nothing to refresh
+            return False
+        grant_type = payload.get("grant_type", None) if payload else None
+        if grant_type and grant_type == "refresh_token":
+            # We are already refreshing
+            return False
+        desired_remaining_time = self._token_duration / 2
+        return (self._expiration_time - datetime.now()) < timedelta(
+            seconds=desired_remaining_time
+        )
+
+    async def _async_get_new_token(self):
+        if not self._refresh_token:
+            return await self._login()
+
+        api_endpoint = self.endpoints["TOKEN"]
+        payload = {"grant_type": "refresh_token", "refresh_token": self._refresh_token}
+        await self._post_token(api_endpoint, payload)
 
     def _sync_request(self, request, url, headers, payload=None):
         try:
@@ -82,26 +105,29 @@ class BaxiAPI:
             return None
         return response
 
-    async def async_post_request(self, endpoint, payload, headers=BASE_HEADER):
+    async def _async_request(self, method, endpoint, headers, payload):
+        if self._need_refresh_token(payload):
+            await self._async_get_new_token()
 
         return await self.hass.async_add_executor_job(
-            self._sync_request, "post", endpoint, headers, payload
+            self._sync_request, method, endpoint, headers, payload
         )
+
+    async def async_post_request(self, endpoint, payload, headers=BASE_HEADER):
+        if self._access_token and endpoint != self.endpoints["TOKEN"]:
+            headers = headers.copy()
+            headers["Authorization"] = f"Bearer {self._access_token}"
+        return await self._async_request("post", endpoint, headers, payload)
 
     async def async_put_request(self, endpoint, payload, headers=BASE_HEADER):
-
-        return await self.hass.async_add_executor_job(
-            self._sync_request, "put", endpoint, headers, payload
-        )
+        return await self._async_request("put", endpoint, headers, payload)
 
     async def async_get_request(self, endpoint, headers=BASE_HEADER):
 
-        headers = self.BASE_HEADER.copy()
+        headers = headers.copy()
         headers["Authorization"] = f"Bearer {self._access_token}"
 
-        response = await self.hass.async_add_executor_job(
-            self._sync_request, "get", endpoint, headers
-        )
+        response = await self._async_request("get", endpoint, headers, None)
 
         return response.json() if response else response
 

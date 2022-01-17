@@ -13,5 +13,7 @@ NAME_KEY = "name"
 DEVICE_ID_KEY = "dev_id"
 PRODUCT_ID_KEY = "product_id"
 FW_KEY = "fw_version"
+LAST_KNOWN_STATE_KEY = "last_known_state"
+LAST_SAMPLE_TIME_KEY = "last_sample_time"
 
 DEVICE_MANUFACTER = "Baxi"
